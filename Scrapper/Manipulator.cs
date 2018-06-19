@@ -159,6 +159,7 @@ namespace Scrapper
         {
             // Remove all local anchors starting with #
             // Remove all local links starting with /
+            // Remove all local links which might look like external links. e.g. index.html
             // Remove all empty links
             // Remove all links like tel:2343 or mailto:email@tes.com
             // Remove all links which don't have a period
@@ -181,13 +182,18 @@ namespace Scrapper
                 if (Regex.IsMatch(filteredLink, @"^https?:\/\/.*[:]", RegexOptions.Compiled))
                     continue;
 
-                string domainName = Regex.Replace(filteredLink, @"^https?:\/\/", "").Split('/')[0];
-                if (Regex.IsMatch(domainName, @"[.]", RegexOptions.Compiled) && !parsedLinks.Contains(link) && !ShouldItBeIgnored(link) && !IsDomainNameAlreadyProcessed(link))
+                var domainName = Regex.Replace(filteredLink, @"^https?:\/\/", "").Split('/')[0];
+                if (!Regex.IsMatch(domainName, @"[.]", RegexOptions.Compiled))
+                    continue;
+
+                if (Regex.IsMatch(domainName.Split('.')[1], @"html?|php|asp*|jsp*|cgi", 
+                    RegexOptions.Compiled | RegexOptions.IgnoreCase))
+                    continue;
+
+                if (!parsedLinks.Contains(link) && !ShouldItBeIgnored(link) && !IsDomainNameAlreadyProcessed(link))
                     filteredLinks.Add(filteredLink);
             }
             return filteredLinks;
-            //return links.Select(a => a.Replace("http://", "").Replace("https://", ""))
-            //    .Where(a => a.Trim().Length > 0 && !a.StartsWith("#") && !a.StartsWith("/") && !a.Contains(":") && a.Contains("."));
         }
 
         protected bool ShouldItBeIgnored(string link)

@@ -7,7 +7,7 @@
     <ProjectGuid>{C77CB5B1-D887-4995-AED5-9954FEE412DB}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>ConsoleClient</RootNamespace>
-    <AssemblyName>ConsoleClient</AssemblyName>
+    <AssemblyName>UrlScrapper</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
