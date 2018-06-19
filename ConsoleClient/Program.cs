@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Fclp;
 using Scrapper;
 
 namespace ConsoleClient
@@ -11,17 +10,17 @@ namespace ConsoleClient
     {
         private string outputFile = "output.txt";
 
-        static void Main(string[] args)
+        static void Main()
         {
             var app = new Program();
-            app.Start(args);
+            app.Start();
 
             Console.ReadKey();
         }
 
-        private void Start(string[] args)
+        private void Start()
         {
-            var arguments = ParseCommandLineParameters(args);
+            var arguments = ParseCommandLineParameters();
             if (arguments == null)
                 return;
 
@@ -38,45 +37,32 @@ namespace ConsoleClient
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="args"></param>
         /// <returns></returns>
-        private CommandLineArg ParseCommandLineParameters(string[] args)
+        private CommandLineArg ParseCommandLineParameters()
         {
-            var argumentParser = new FluentCommandLineParser<CommandLineArg>();
+            var arguments = new CommandLineArg();
 
-            // Url Argument
-            argumentParser.Setup(a => a.Url)
-                .As('u', "url")
-                .Required()
-                .UseForOrphanArguments()
-                .WithDescription("Url to explore links from");
-
-            // Maximum depth Argument
-            argumentParser.Setup(a => a.MaxDepth)
-                .As('d', "max-depth")
-                .Required()
-                .WithDescription("Maximum depth");
-
-            // Ignore Url File Location Argument
-            argumentParser.Setup(a => a.IgnoreUrlFile)
-                .As('i', "ignore-file")
-                .SetDefault("IgnoreSitesList.txt")
-                .WithDescription("Ignore Url File Location");
-
-            // Verbose Argument
-            argumentParser.Setup(a => a.Verbose)
-                .As('v', "verbose")
-                .SetDefault(false)
-                .WithDescription("Verbose");
-
-            var result = argumentParser.Parse(args);
-            if (result.HasErrors)
+            Console.Write("Provide URL to explore: ");
+            arguments.Url = Console.ReadLine();
+            if (arguments.Url == null || arguments.Url.Trim().Length == 0)
             {
-                Console.WriteLine("Invalid input parameters.");
-                return null;
+                throw new InvalidOperationException();
             }
 
-            return argumentParser.Object;
+            Console.Write("Provide maximum depth to explore: ");
+            arguments.MaxDepth = int.Parse(Console.ReadLine() ?? "1");
+
+            Console.Write("Ignore Sites List file (skip to use default): ");
+            arguments.IgnoreUrlFile = Console.ReadLine();
+            if (arguments.IgnoreUrlFile != null && arguments.IgnoreUrlFile.Trim().Length == 0)
+            {
+                arguments.IgnoreUrlFile = "IgnoreSitesList.txt";
+            }
+
+            Console.Write("Verbose Mode (y/n): ");
+            arguments.Verbose = Console.ReadKey().Key.Equals(ConsoleKey.Y);
+
+            return arguments;
         }
 
         /// <summary>

@@ -180,8 +180,9 @@ namespace Scrapper
                     filteredLink = "http://" + filteredLink;
                 if (Regex.IsMatch(filteredLink, @"^https?:\/\/.*[:]", RegexOptions.Compiled))
                     continue;
-                
-                if (Regex.IsMatch(filteredLink, @"[.]", RegexOptions.Compiled) && !parsedLinks.Contains(link) && !ShouldItBeIgnored(link) && !IsDomainNameAlreadyProcessed(link))
+
+                string domainName = Regex.Replace(filteredLink, @"^https?:\/\/", "").Split('/')[0];
+                if (Regex.IsMatch(domainName, @"[.]", RegexOptions.Compiled) && !parsedLinks.Contains(link) && !ShouldItBeIgnored(link) && !IsDomainNameAlreadyProcessed(link))
                     filteredLinks.Add(filteredLink);
             }
             return filteredLinks;
