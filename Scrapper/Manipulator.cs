@@ -83,9 +83,9 @@ namespace Scrapper
 
                 if (verbose)
                 {
-                    Console.WriteLine($"\nLink: {linkToParse}");
+                    Console.WriteLine($"Link: {linkToParse}");
                 }
-                Console.WriteLine($"Queue: {queuedLinks.Count}, Parsed: {parsedLinks.Count}, Current Depth: {linksDepth[linkToParse]}");
+                Console.WriteLine($"Queue: {queuedLinks.Count}, Parsed: {parsedLinks.Count}, Current Depth: {linksDepth[linkToParse]}\n");
 
                 queuedLinks.Remove(linkToParse);
                 linksDepth.Remove(linkToParse);

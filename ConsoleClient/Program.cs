@@ -9,6 +9,7 @@ namespace ConsoleClient
     class Program
     {
         private string outputFile = "output.txt";
+        private string inputFile = "input.txt";
 
         static void Main()
         {
@@ -20,7 +21,7 @@ namespace ConsoleClient
 
         private void Start()
         {
-            var arguments = ParseCommandLineParameters();
+            var arguments = ParseInput(inputFile);
             if (arguments == null)
                 return;
 
@@ -38,30 +39,56 @@ namespace ConsoleClient
         /// 
         /// </summary>
         /// <returns></returns>
-        private CommandLineArg ParseCommandLineParameters()
+        private CommandLineArg ParseInput(string inputFilePath)
         {
             var arguments = new CommandLineArg();
 
-            Console.Write("Provide URL to explore: ");
-            arguments.Url = Console.ReadLine();
-            if (arguments.Url == null || arguments.Url.Trim().Length == 0)
+            try
             {
-                throw new InvalidOperationException();
+                // Create an instance of StreamReader to read from a file.
+                // The using statement also closes the StreamReader.
+                using (var sr = new StreamReader(inputFilePath))
+                {
+                    string line;
+
+                    while ((line = sr.ReadLine()) != null)
+                    {
+                        line = line.Trim();
+                        if (line.StartsWith("//") || line.Length == 0)
+                            continue;
+
+                        if (line.StartsWith("-url"))
+                        {
+                            arguments.Url = line.Substring(5);
+                            if (string.IsNullOrEmpty(arguments.Url))
+                            {
+                                throw new InvalidOperationException("Invalid value for URL parameter");
+                            }
+                        }
+                        else if (line.StartsWith("-depth"))
+                        {
+                            arguments.MaxDepth = int.Parse(line.Substring(7));
+                        }
+                        else if (line.StartsWith("-ignore"))
+                        {
+                            arguments.IgnoreUrlFile = line.Substring(8);
+                            if (string.IsNullOrEmpty(arguments.IgnoreUrlFile))
+                            {
+                                arguments.IgnoreUrlFile = "IgnoreSitesList.txt";
+                            }
+                        }
+                        else if (line.StartsWith("-verbose"))
+                        {
+                            arguments.Verbose = true;
+                        }
+                    }
+                }
             }
-
-            Console.Write("Provide maximum depth to explore: ");
-            arguments.MaxDepth = int.Parse(Console.ReadLine() ?? "1");
-
-            Console.Write("Ignore Sites List file (skip to use default): ");
-            arguments.IgnoreUrlFile = Console.ReadLine();
-            if (arguments.IgnoreUrlFile != null && arguments.IgnoreUrlFile.Trim().Length == 0)
+            catch (Exception e)
             {
-                arguments.IgnoreUrlFile = "IgnoreSitesList.txt";
+                // Let the user know what went wrong.
+                Console.WriteLine(e.Message);
             }
-
-            Console.Write("Verbose Mode (y/n): ");
-            arguments.Verbose = Console.ReadKey().Key.Equals(ConsoleKey.Y);
-
             return arguments;
         }
 
@@ -94,7 +121,7 @@ namespace ConsoleClient
             catch (Exception e)
             {
                 // Let the user know what went wrong.
-                Console.WriteLine("The file could not be read:");
+                Console.WriteLine("The ignore sites list file could not be read:");
                 Console.WriteLine(e.Message);
             }
 
@@ -115,7 +142,7 @@ namespace ConsoleClient
                 {
                     foreach (var link in links)
                     {
-                        sw.WriteLine(link);
+                        sw.WriteLine($"0.0.0.0 ${link}");
 
                         if (isVerbose)
                         {

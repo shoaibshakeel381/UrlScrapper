@@ -1,0 +1,13 @@
+﻿// Separate Key and value by space
+
+// Url to Explore
+-url https://blog.hartleybrody.com/web-scraping-cheat-sheet/#extracting-content-from-html
+
+// Maximum Depth
+-depth 1
+
+// Ignore Sites List File
+-ignore IgnoreSitesList.txt
+
+// Verbose Mode
+-verbose
