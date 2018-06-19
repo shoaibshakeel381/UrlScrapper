@@ -1,0 +1,18 @@
+﻿// All sites must be on new lines by themselves
+// Regular expressions are supported
+// Link will be in the form of 'http://www.google.com/maps?q=asdfa'
+// And match will be made like this: Regex.IsMatch(linkToBeTested, oneIgnoreSite, RegexOptions.IgnoreCase)
+// 
+doubleclick
+twitter
+linkedin
+facebook
+digitalocean
+github
+w3c
+w3.org
+cdn.
+google
+ads
+youtube
+^https?://accounts.
