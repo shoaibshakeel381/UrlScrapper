@@ -2,10 +2,10 @@
 
 // Url to Explore
 // https://blog.hartleybrody.com/web-scraping-cheat-sheet/#extracting-content-from-html
--url http://eromanga-ace.com
+-url http://zzcartoon.com
 
 // Maximum Depth
--depth 3
+-depth 2
 
 // Ignore Sites List File
 -ignore IgnoreSitesList.txt
