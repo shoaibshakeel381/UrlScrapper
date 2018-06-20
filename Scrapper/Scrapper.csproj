@@ -43,6 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataModel.cs" />
     <Compile Include="Manipulator.cs" />
     <Compile Include="ScrapperAgent.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

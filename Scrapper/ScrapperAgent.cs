@@ -2,17 +2,18 @@
 using System.Linq;
 using System.Threading.Tasks;
 using AngleSharp;
-using AngleSharp.Dom;
 
 namespace Scrapper
 {
     public class ScrapperAgent
     {
         protected IConfiguration config;
+        protected IBrowsingContext browsingContext;
 
         public ScrapperAgent()
         {
             config = Configuration.Default.WithDefaultLoader();
+            browsingContext = BrowsingContext.New(config);
         }
 
         public IEnumerable<string> GetPageLinks(string url)
@@ -20,16 +21,13 @@ namespace Scrapper
             var result = GetPageLinksAsync(url);
             result.Wait();
 
-            return result.Result.Select(a => a.GetAttribute("href"));
+            return result.Result;
         }
 
-        protected async Task<IHtmlCollection<IElement>> GetPageLinksAsync(string url)
+        protected async Task<IEnumerable<string>> GetPageLinksAsync(string url)
         {
-            var document = await BrowsingContext.New(config).OpenAsync(url);
-
-            var querySelectorAll = document.Links;
-
-            return querySelectorAll;
+            var document = await browsingContext.OpenAsync(url);
+            return document.Links.Select(a => a.GetAttribute("href"));
         }
     }
 }

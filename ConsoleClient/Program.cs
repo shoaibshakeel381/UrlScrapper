@@ -8,8 +8,8 @@ namespace ConsoleClient
 {
     class Program
     {
-        private string outputFile = "output.txt";
-        private string inputFile = "input.txt";
+        private const string OutputFile = "output.txt";
+        private const string InputFile = "input.txt";
 
         static void Main()
         {
@@ -21,32 +21,24 @@ namespace ConsoleClient
 
         private void Start()
         {
-            var arguments = ParseInput(inputFile);
+            var arguments = ParseInput(InputFile);
             if (arguments == null)
                 return;
-
-            var ignore = GetIgnoreSitesList(arguments.IgnoreUrlFile);
             
             // Parse and Filter-out unnecessary links
-            var manipulator = new Manipulator(arguments.Url, ignore, arguments.MaxDepth, arguments.Verbose);
+            var manipulator = new Manipulator(arguments);
             var uniqeLinks = manipulator.Parse();
 
             // Print Links
             PrintOutResults(uniqeLinks, arguments.Verbose);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        private CommandLineArg ParseInput(string inputFilePath)
+        private DataModel ParseInput(string inputFilePath)
         {
-            var arguments = new CommandLineArg();
+            var arguments = new DataModel();
 
             try
             {
-                // Create an instance of StreamReader to read from a file.
-                // The using statement also closes the StreamReader.
                 using (var sr = new StreamReader(inputFilePath))
                 {
                     string line;
@@ -71,11 +63,12 @@ namespace ConsoleClient
                         }
                         else if (line.StartsWith("-ignore"))
                         {
-                            arguments.IgnoreUrlFile = line.Substring(8);
-                            if (string.IsNullOrEmpty(arguments.IgnoreUrlFile))
+                            var ignoreUrlFile = line.Substring(8);
+                            if (string.IsNullOrEmpty(ignoreUrlFile))
                             {
-                                arguments.IgnoreUrlFile = "IgnoreSitesList.txt";
+                                ignoreUrlFile = "IgnoreSitesList.txt";
                             }
+                            arguments.IgnoreUrls = GetIgnoreSitesList(ignoreUrlFile);
                         }
                         else if (line.StartsWith("-verbose"))
                         {
@@ -86,17 +79,16 @@ namespace ConsoleClient
             }
             catch (Exception e)
             {
-                // Let the user know what went wrong.
                 Console.WriteLine(e.Message);
+                return null;
             }
+            
             return arguments;
         }
 
         /// <summary>
-        /// Read list of sites from ignore
+        /// Read list of sites to ignore from file
         /// </summary>
-        /// <param name="filePath"></param>
-        /// <returns></returns>
         private IEnumerable<string> GetIgnoreSitesList(string filePath)
         {
             if (filePath == null)
@@ -105,8 +97,6 @@ namespace ConsoleClient
             var ignore = new List<string>();
             try
             {
-                // Create an instance of StreamReader to read from a file.
-                // The using statement also closes the StreamReader.
                 using (var sr = new StreamReader(filePath))
                 {
                     string line;
@@ -120,7 +110,6 @@ namespace ConsoleClient
             }
             catch (Exception e)
             {
-                // Let the user know what went wrong.
                 Console.WriteLine("The ignore sites list file could not be read:");
                 Console.WriteLine(e.Message);
             }
@@ -131,18 +120,16 @@ namespace ConsoleClient
         /// <summary>
         /// Print out results to output file
         /// </summary>
-        /// <param name="links"></param>
-        /// <param name="isVerbose"></param>
         private void PrintOutResults(IEnumerable<string> links, bool isVerbose)
         {
             try
             {
                 Console.WriteLine($"\n\nFound Sites: ({links.Count()})");
-                using (var sw = new StreamWriter(outputFile))
+                using (var sw = new StreamWriter(OutputFile))
                 {
                     foreach (var link in links)
                     {
-                        sw.WriteLine($"0.0.0.0 ${link}");
+                        sw.WriteLine(link);
 
                         if (isVerbose)
                         {

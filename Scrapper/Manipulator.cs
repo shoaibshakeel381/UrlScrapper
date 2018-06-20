@@ -7,190 +7,148 @@ namespace Scrapper
 {
     public class Manipulator
     {
-        /// <summary>
-        /// Maximum depth of link exploration
-        /// </summary>
-        protected int maxDepth;
+        protected DataModel InputData { get; }
 
-        /// <summary>
-        /// All explored links
-        /// </summary>
-        protected ISet<string> parsedLinks;
-
-        /// <summary>
-        /// Print messages during execution
-        /// </summary>
-        protected bool verbose;
-
-        /// <summary>
-        /// Depth of a link in exploration tree
-        /// </summary>
-        protected IDictionary<string, int> linksDepth;
-
-        /// <summary>
-        /// Links yet to be explored
-        /// </summary>
-        protected ISet<string> queuedLinks;
-
-        /// <summary>
-        /// Links which should be ignored during exploration
-        /// </summary>
-        protected ISet<string> ignoredLinks;
-
-        /// <summary>
-        /// Web Scrapper instance
-        /// </summary>
+        protected ProcessingLists Lists { get; }
+        
         protected ScrapperAgent scrapperAgent;
 
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        /// <param name="linkToParse"></param>
-        /// <param name="parseMaxDepth"></param>
-        /// <param name="verbose"></param>
-        public Manipulator(string linkToParse, int parseMaxDepth, bool verbose = false)
+        public Manipulator(DataModel inputData)
         {
-            maxDepth = parseMaxDepth;
-            this.verbose = verbose;
-            parsedLinks = new HashSet<string>();
-            linksDepth = new Dictionary<string, int>();
-            queuedLinks = new HashSet<string>();
-            ignoredLinks = new HashSet<string>();
-
+            InputData = inputData;
+            Lists = new ProcessingLists();
             scrapperAgent = new ScrapperAgent();
 
-            QueueLinks(new[] { linkToParse }, 0);
-        }
-
-        /// <inheritdoc />
-        public Manipulator(string linkToParse, IEnumerable<string> ignoreLinks,int parseDepth, bool verbose = false) 
-            : this(linkToParse, parseDepth, verbose)
-        {
-            ignoredLinks = new HashSet<string>(ignoreLinks);
+            QueueLinks("root", new[] { InputData.Url }, 0);
         }
 
         /// <summary>
         /// Start Link Explorartion
         /// </summary>
-        /// <returns></returns>
         public IEnumerable<string> Parse()
         {
-            while (queuedLinks.Count != 0)
+            while (Lists.QueuedLinks.Count != 0)
             {
-                var linkToParse = queuedLinks.First();
+                var linkToParse = Lists.QueuedLinks.First();
 
-                Parse(linkToParse);
-
-                if (verbose)
+                try
                 {
-                    Console.WriteLine($"Link: {linkToParse}");
+                    Parse(linkToParse);
+                    if (InputData.Verbose)
+                    {
+                        Console.WriteLine($"Link: {linkToParse}");
+                    }
                 }
-                Console.WriteLine($"Queue: {queuedLinks.Count}, Parsed: {parsedLinks.Count}, Current Depth: {linksDepth[linkToParse]}\n");
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error occurred when parsing url:\n{linkToParse}");
+                    if (InputData.Verbose)
+                    {
+                        Console.WriteLine(e);
+                    }
+                }
+                
+                Console.WriteLine($"Queue: {Lists.QueuedLinks.Count}, Parsed: {Lists.ParsedLinks.Count}, Current Depth: {Lists.LinksDepth[linkToParse]}\n");
 
-                queuedLinks.Remove(linkToParse);
-                linksDepth.Remove(linkToParse);
+                Lists.QueuedLinks.Remove(linkToParse);
+                Lists.LinksDepth.Remove(linkToParse);
             }
 
-            return ExtractDomainNames(parsedLinks);
+            return ExtractDomainNames(Lists.ParsedLinks);
         }
 
-        /// <summary>
-        /// Explore a single link
-        /// </summary>
-        /// <param name="linkToParse"></param>
-        protected void Parse(string linkToParse)
+        private void Parse(string linkToParse)
         {
-            if (linksDepth[linkToParse] > maxDepth)
+            if (Lists.LinksDepth[linkToParse] > InputData.MaxDepth)
                 return;
             
             var links = scrapperAgent.GetPageLinks(linkToParse);
             
-            QueueLinks(links, linksDepth[linkToParse] + 1);
+            QueueLinks(linkToParse, links, Lists.LinksDepth[linkToParse] + 1);
 
             // Marked this link as parsed
-            parsedLinks.Add(linkToParse);
+            Lists.ParsedLinks.Add(linkToParse);
         }
 
         /// <summary>
         /// Put new links in Queue at given depth
         /// </summary>
-        /// <param name="links"></param>
-        /// <param name="depth"></param>
-        protected void QueueLinks(IEnumerable<string> links, int depth)
+        protected void QueueLinks(string parentLink, IEnumerable<string> links, int depth)
         {
             // Filter-out unnecessary links
             var filteredLinks = FilterLinks(links);
             
             // Do not queue links whose depth exceeds the specified depth
-            // Since we already found these then just mark them as processed.
-            if (depth > maxDepth)
+            // But Since we already found these then just mark them as processed.
+            if (depth > InputData.MaxDepth)
             {
                 foreach (var link in filteredLinks)
                 {
-                    parsedLinks.Add(link);
+                    Lists.ParsedLinks.Add(link);
                 }
                 return;
             }
 
             foreach (var link in filteredLinks)
             {
-                QueueLink(link, depth);
+                QueueLink(parentLink, link, depth);
             }
         }
 
-        /// <summary>
-        /// Put new link in Queue at given depth
-        /// </summary>
-        /// <param name="link"></param>
-        /// <param name="depth"></param>
-        protected void QueueLink(string link, int depth)
+        private void QueueLink(string parentLink, string link, int depth)
         {
-            queuedLinks.Add(link);
-            if (!linksDepth.ContainsKey(link))
-                linksDepth.Add(link, depth);
+            Lists.QueuedLinks.Add(link);
+
+            if (!Lists.LinkParent.ContainsKey(link))
+                Lists.LinkParent.Add(link, parentLink);
+
+            if (!Lists.LinksDepth.ContainsKey(link))
+                Lists.LinksDepth.Add(link, depth);
         }
 
         /// <summary>
         /// Remove unnecessary links
         /// </summary>
-        /// <param name="links"></param>
-        /// <returns></returns>
         public IEnumerable<string> FilterLinks(IEnumerable<string> links)
         {
-            // Remove all local anchors starting with #
-            // Remove all local links starting with /
-            // Remove all local links which might look like external links. e.g. index.html
-            // Remove all empty links
-            // Remove all links like tel:2343 or mailto:email@tes.com
-            // Remove all links which don't have a period
-            // Remove JS, CSS and Images
-            // Append http:// to links
             var filteredLinks = new List<string>();
             foreach (var link in links)
             {
                 var filteredLink = link.Trim();
+
+                // Remove all empty links
                 if (filteredLink.Length == 0)
                     continue;
-                
+
+                // Remove all local anchors starting with # or /
                 if (Regex.IsMatch(filteredLink, @"^#|^.?.?\/", RegexOptions.Compiled))
                     continue;
+
+                // Remove JS, CSS and Images
                 if (Regex.IsMatch(filteredLink, @"\/.*\.(css|js|jpeg|jpg|png|gif|bmp|svg)(\?.*)?$", 
                     RegexOptions.Compiled | RegexOptions.IgnoreCase))
                     continue;
+
+                // Append http:// to links
                 if (!Regex.IsMatch(filteredLink, @"^https?:\/\/", RegexOptions.Compiled | RegexOptions.IgnoreCase))
                     filteredLink = "http://" + filteredLink;
+
+                // Remove all links like tel:2343 or mailto:email@tes.com
                 if (Regex.IsMatch(filteredLink, @"^https?:\/\/.*[:]", RegexOptions.Compiled))
                     continue;
 
                 var domainName = Regex.Replace(filteredLink, @"^https?:\/\/", "").Split('/')[0];
+
+                // Remove all links which don't have a period
                 if (!Regex.IsMatch(domainName, @"[.]", RegexOptions.Compiled))
                     continue;
 
+                // Remove all local links which might look like external links. e.g. index.html
                 if (Regex.IsMatch(domainName.Split('.')[1], @"html?|php|asp*|jsp*|cgi", 
                     RegexOptions.Compiled | RegexOptions.IgnoreCase))
                     continue;
 
-                if (!parsedLinks.Contains(link) && !ShouldItBeIgnored(link) && !IsDomainNameAlreadyProcessed(link))
+                if (!Lists.ParsedLinks.Contains(link) && !ShouldItBeIgnored(link) && !IsDomainNameAlreadyProcessed(link))
                     filteredLinks.Add(filteredLink);
             }
             return filteredLinks;
@@ -198,16 +156,16 @@ namespace Scrapper
 
         protected bool ShouldItBeIgnored(string link)
         {
-            return ignoredLinks.Any(a => Regex.IsMatch(link, a, RegexOptions.IgnoreCase | RegexOptions.Compiled));
+            return InputData.IgnoreUrls.Any(a => Regex.IsMatch(link, a, RegexOptions.IgnoreCase | RegexOptions.Compiled));
         }
 
         protected bool IsDomainNameAlreadyProcessed(string link)
         {
             var parts = Regex.Replace(link, @"^https?:\/\/", "").Split('/');
-            if (queuedLinks.Any(a => Regex.IsMatch(a, parts[0])))
+            if (Lists.QueuedLinks.Any(a => Regex.IsMatch(a, parts[0])))
                 return true;
 
-            if (parsedLinks.Any(a => Regex.IsMatch(a, parts[0])))
+            if (Lists.ParsedLinks.Any(a => Regex.IsMatch(a, parts[0])))
                 return true;
 
             return false;
@@ -216,8 +174,6 @@ namespace Scrapper
         /// <summary>
         /// Extract only domain names from remaning links
         /// </summary>
-        /// <param name="links"></param>
-        /// <returns></returns>
         public IEnumerable<string> ExtractDomainNames(IEnumerable<string> links)
         {
             var uniqeLinks = new HashSet<string>();
@@ -228,6 +184,37 @@ namespace Scrapper
             }
 
             return uniqeLinks.AsEnumerable();
+        }
+
+        protected class ProcessingLists
+        {
+            /// <summary>
+            /// All explored links
+            /// </summary>
+            public ISet<string> ParsedLinks { get; }
+
+            /// <summary>
+            /// Depth of a link in exploration tree
+            /// </summary>
+            public IDictionary<string, int> LinksDepth { get; }
+
+            /// <summary>
+            /// Links yet to be explored
+            /// </summary>
+            public ISet<string> QueuedLinks { get; }
+
+            /// <summary>
+            /// This will store parent of a link for debugging purposes. Key is link and value is parent link
+            /// </summary>
+            public IDictionary<string, string> LinkParent { get; }
+
+            public ProcessingLists()
+            {
+                ParsedLinks = new HashSet<string>();
+                LinksDepth = new Dictionary<string, int>();
+                QueuedLinks = new HashSet<string>();
+                LinkParent = new Dictionary<string, string>();
+            }
         }
     }
 }
