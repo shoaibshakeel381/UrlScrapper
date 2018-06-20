@@ -18,3 +18,5 @@ youtube
 ^https?://accounts.
 stackoverflow
 stackexchange.com
+fc2
+help

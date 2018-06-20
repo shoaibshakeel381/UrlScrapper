@@ -97,6 +97,12 @@ namespace Scrapper
 
         private void QueueLink(string parentLink, string link, int depth)
         {
+            // If Same domain exploration is prohibited than skip link
+            if (!InputData.ParseSameDomainLinks && IsDomainNameAlreadyProcessed(link))
+            {
+                return;
+            }
+
             Lists.QueuedLinks.Add(link);
 
             if (!Lists.LinkParent.ContainsKey(link))
@@ -137,7 +143,7 @@ namespace Scrapper
                 if (Regex.IsMatch(filteredLink, @"^https?:\/\/.*[:]", RegexOptions.Compiled))
                     continue;
 
-                var domainName = Regex.Replace(filteredLink, @"^https?:\/\/", "").Split('/')[0];
+                var domainName = ExtractDomainName(filteredLink);
 
                 // Remove all links which don't have a period
                 if (!Regex.IsMatch(domainName, @"[.]", RegexOptions.Compiled))
@@ -161,11 +167,11 @@ namespace Scrapper
 
         protected bool IsDomainNameAlreadyProcessed(string link)
         {
-            var parts = Regex.Replace(link, @"^https?:\/\/", "").Split('/');
-            if (Lists.QueuedLinks.Any(a => Regex.IsMatch(a, parts[0])))
+            var domainName = ExtractDomainName(link);
+            if (Lists.QueuedLinks.Any(a => Regex.IsMatch(a, domainName)))
                 return true;
 
-            if (Lists.ParsedLinks.Any(a => Regex.IsMatch(a, parts[0])))
+            if (Lists.ParsedLinks.Any(a => Regex.IsMatch(a, domainName)))
                 return true;
 
             return false;
@@ -179,11 +185,15 @@ namespace Scrapper
             var uniqeLinks = new HashSet<string>();
             foreach (var link in links)
             {
-                var parts = Regex.Replace(link, @"^https?:\/\/", "").Split('/');
-                uniqeLinks.Add(parts[0]);
+                uniqeLinks.Add(ExtractDomainName(link));
             }
 
             return uniqeLinks.AsEnumerable();
+        }
+
+        public string ExtractDomainName(string link)
+        {
+            return Regex.Replace(link, @"^https?:\/\/", "").Split('/')[0];
         }
 
         protected class ProcessingLists

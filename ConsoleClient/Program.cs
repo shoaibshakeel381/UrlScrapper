@@ -74,6 +74,10 @@ namespace ConsoleClient
                         {
                             arguments.Verbose = true;
                         }
+                        else if (line.StartsWith("-parseSameDomain"))
+                        {
+                            arguments.ParseSameDomainLinks = true;
+                        }
                     }
                 }
             }

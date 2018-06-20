@@ -1,13 +1,17 @@
 ﻿// Separate Key and value by space
 
 // Url to Explore
--url https://blog.hartleybrody.com/web-scraping-cheat-sheet/#extracting-content-from-html
+// https://blog.hartleybrody.com/web-scraping-cheat-sheet/#extracting-content-from-html
+-url http://eromanga-ace.com
 
 // Maximum Depth
--depth 1
+-depth 3
 
 // Ignore Sites List File
 -ignore IgnoreSitesList.txt
 
 // Verbose Mode
 -verbose
+
+// Parse same domain multiple times, if link is different
+// -parseSameDomain

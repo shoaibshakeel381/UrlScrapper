@@ -11,5 +11,7 @@ namespace Scrapper
         public bool Verbose { get; set; }
 
         public int MaxDepth { get; set; }
+
+        public bool ParseSameDomainLinks { get; set; }
     }
 }
