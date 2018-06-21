@@ -178,7 +178,7 @@ namespace Scrapper
         }
 
         /// <summary>
-        /// Extract only domain names from remaning links
+        /// Extract only domain names from remaining links
         /// </summary>
         public IEnumerable<string> ExtractDomainNames(IEnumerable<string> links)
         {

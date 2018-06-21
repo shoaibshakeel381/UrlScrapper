@@ -2,7 +2,8 @@
 
 // Url to Explore
 // https://blog.hartleybrody.com/web-scraping-cheat-sheet/#extracting-content-from-html
--url http://zzcartoon.com
+// https://theporndude.com
+-url www.zzcartoon.com
 
 // Maximum Depth
 -depth 2

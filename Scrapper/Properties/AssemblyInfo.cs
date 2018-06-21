@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("Scrapper")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Web Scrapper component for URL Scrapper")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Scrapper")]
-[assembly: AssemblyCopyright("Copyright ©  2018")]
+[assembly: AssemblyCompany("Shoaib Shakeel")]
+[assembly: AssemblyProduct("URL Scrapper")]
+[assembly: AssemblyCopyright("Copyright © Shoaib Shakeel 2018")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

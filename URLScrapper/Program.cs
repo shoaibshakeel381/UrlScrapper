@@ -2,21 +2,45 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Scrapper;
 
-namespace ConsoleClient
+namespace URLScrapper
 {
     class Program
     {
         private const string OutputFile = "output.txt";
         private const string InputFile = "input.txt";
 
-        static void Main()
+        static void Main(string[] args)
         {
+            // Use a custom app domain which is setup to use custom app.config file
+            if (IsDefaultDomainEnabled(args))
+                return;
+
             var app = new Program();
             app.Start();
 
             Console.ReadKey();
+        }
+
+        private static bool IsDefaultDomainEnabled(string[] args)
+        {
+            if (AppDomain.CurrentDomain.IsDefaultAppDomain())
+            {
+                var currentAssembly = Assembly.GetExecutingAssembly();
+                var domainSetup = new AppDomainSetup
+                {
+                    ConfigurationFile = Path.GetDirectoryName(currentAssembly.Location) + "\\App.config"
+                };
+                var appDomain = AppDomain.CreateDomain("URL Scrapper", null, domainSetup);
+
+                Environment.ExitCode = appDomain.ExecuteAssemblyByName(currentAssembly.FullName, args);
+
+                return true;
+            }
+
+            return false;
         }
 
         private void Start()
