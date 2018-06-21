@@ -47,7 +47,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>link-256.ico</ApplicationIcon>
+    <ApplicationIcon>link.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>URLScrapper.Program</StartupObject>
@@ -83,7 +83,7 @@
     <Content Include="Input.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="link-256.ico" />
+    <Content Include="link.ico" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.6.1">
